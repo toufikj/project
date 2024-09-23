@@ -4,35 +4,38 @@ on:
   push:
     branches:
       - main
-  workflow_dispatch:  # This enables manual triggering
+  workflow_dispatch:  # Enable manual triggering
 
 jobs:
   send_email:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Install ssmtp and send email
+      - name: Install ssmtp and configure email
         run: |
+          # Install ssmtp
           sudo apt-get update
-          sudo apt-get install ssmtp -y
+          sudo apt-get install -y ssmtp
 
-          # Create the ssmtp configuration file
-          echo "root=postmaster" > ssmtp.conf
-          echo "mailhub=smtp.gmail.com:587" >> ssmtp.conf
-          echo "AuthUser=$EMAIL_USERNAME" >> ssmtp.conf
-          echo "AuthPass=$EMAIL_PASSWORD" >> ssmtp.conf
-          echo "UseTLS=YES" >> ssmtp.conf
-          echo "UseSTARTTLS=YES" >> ssmtp.conf
-          echo "FromLineOverride=YES" >> ssmtp.conf
+          # Create the ssmtp.conf file in the correct location
+          sudo bash -c 'echo "root=postmaster" > /etc/ssmtp/ssmtp.conf'
+          sudo bash -c 'echo "mailhub=smtp.gmail.com:587" >> /etc/ssmtp/ssmtp.conf'
+          sudo bash -c 'echo "AuthUser=$EMAIL_USERNAME" >> /etc/ssmtp/ssmtp.conf'
+          sudo bash -c 'echo "AuthPass=$EMAIL_PASSWORD" >> /etc/ssmtp/ssmtp.conf'
+          sudo bash -c 'echo "UseTLS=YES" >> /etc/ssmtp/ssmtp.conf'
+          sudo bash -c 'echo "UseSTARTTLS=YES" >> /etc/ssmtp/ssmtp.conf'
+          sudo bash -c 'echo "FromLineOverride=YES" >> /etc/ssmtp/ssmtp.conf'
 
-          # Send the email
+          # Send the email with subject and body
           echo "Subject: GitHub Actions Notification" > message.txt
           echo "Hello, this is Toufik Jamadar from GitHub Actions." >> message.txt
           echo "" >> message.txt
           echo "This email is sent from a workflow." >> message.txt
+
+          # Send email using ssmtp
           ssmtp -v $EMAIL_RECEIVER < message.txt
 
         env:
-          EMAIL_USERNAME: ${{ secrets.EMAIL_USERNAME }}  # Gmail username or email
-          EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}  # Gmail app password
-          EMAIL_RECEIVER: ${{ secrets.EMAIL_RECEIVER }}  # Email recipient
+          EMAIL_USERNAME: ${{ secrets.EMAIL_USERNAME }}  # Your Gmail email address
+          EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}  # Gmail App Password
+          EMAIL_RECEIVER: ${{ secrets.EMAIL_RECEIVER }}  # Recipient's email address
