@@ -1,0 +1,38 @@
+name: Send Email Manually or on Push
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:  # This enables manual triggering
+
+jobs:
+  send_email:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Install ssmtp and send email
+        run: |
+          sudo apt-get update
+          sudo apt-get install ssmtp -y
+
+          # Create the ssmtp configuration file
+          echo "root=postmaster" > ssmtp.conf
+          echo "mailhub=smtp.gmail.com:587" >> ssmtp.conf
+          echo "AuthUser=$EMAIL_USERNAME" >> ssmtp.conf
+          echo "AuthPass=$EMAIL_PASSWORD" >> ssmtp.conf
+          echo "UseTLS=YES" >> ssmtp.conf
+          echo "UseSTARTTLS=YES" >> ssmtp.conf
+          echo "FromLineOverride=YES" >> ssmtp.conf
+
+          # Send the email
+          echo "Subject: GitHub Actions Notification" > message.txt
+          echo "Hello, this is Toufik Jamadar from GitHub Actions." >> message.txt
+          echo "" >> message.txt
+          echo "This email is sent from a workflow." >> message.txt
+          ssmtp -v $EMAIL_RECEIVER < message.txt
+
+        env:
+          EMAIL_USERNAME: ${{ secrets.EMAIL_USERNAME }}  # Gmail username or email
+          EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}  # Gmail app password
+          EMAIL_RECEIVER: ${{ secrets.EMAIL_RECEIVER }}  # Email recipient
